@@ -1,0 +1,19 @@
+digraph G {
+  "INIT" -> "TURN";
+  "INIT" -> "STOP"[style=dotted];
+
+  "TURN" -> "RECO";
+  "TURN" -> "INIT"[style=dotted];
+
+  "RECO" -> "GETM";
+  "RECO" -> "INIT"[style=dotted];
+
+  "GETM" -> "MOVE";
+  "GETM" -> "INIT"[style=dotted];
+
+  "MOVE" -> "WAIT";
+  "MOVE" -> "STOP"[style=dotted];
+
+  "WAIT" -> "TURN";
+  "WAIT" -> "INIT"[style=dotted];
+}

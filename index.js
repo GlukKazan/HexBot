@@ -154,6 +154,43 @@ function getSetup(fen) {
     return r;
 }
 
+function DoneCallback(goal) {
+    app.state  = STATE.WAIT;
+    if (goal > 0) {
+        console.log('WON !!!');
+        logger.info('WON !!!');
+        axios.post(SERVICE + '/session/close', {
+            winner: uid
+        }, {
+            headers: { Authorization: `Bearer ${TOKEN}` }
+        })
+        .then(function (response) {
+            app.state  = STATE.TURN;
+        })
+        .catch(function (error) {
+            console.log('MOVE ERROR: ' + error);
+            logger.error('MOVE ERROR: ' + error);
+            app.state  = STATE.INIT;
+        });
+    } else {
+        console.log('LOSE !!!');
+        logger.info('LOSE !!!');
+        axios.post(SERVICE + '/session/close', {
+            loser: uid
+        }, {
+            headers: { Authorization: `Bearer ${TOKEN}` }
+        })
+        .then(function (response) {
+            app.state  = STATE.TURN;
+        })
+        .catch(function (error) {
+            console.log('MOVE ERROR: ' + error);
+            logger.error('MOVE ERROR: ' + error);
+            app.state  = STATE.INIT;
+        });
+    }
+}
+
 function FinishTurnCallback(bestMove, fen, value, time) {
     let move = game.FormatMove(bestMove);
     const result = setup.match(/[?&]turn=(\d+)/);
@@ -191,7 +228,7 @@ let sendMove = function(app) {
         let fen = result[2];
         console.log('[' + sid + '] fen = ' + fen);
         logger.info('[' + sid + '] fen = ' + fen);
-        game.FindMove(fen, player, FinishTurnCallback, logger);
+        game.FindMove(fen, player, FinishTurnCallback, DoneCallback, logger);
     } else {
         app.state  = STATE.STOP;
     }

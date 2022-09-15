@@ -47,6 +47,7 @@ function getFen(board, player) {
             str += "/";
             k = 0;
             c = 0;
+            p = 0;
         }
         k++;
         const v = board[pos];

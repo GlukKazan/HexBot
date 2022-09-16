@@ -6,6 +6,8 @@ const SIZE = 11;
 
 const LETTERS = 'ABCDEFGHIJKabcdefghijk';
 
+let edges = null;
+
 function dump(board, size, moves) {
     for (let y = 0; y < size; y++) {
         let s = '';
@@ -42,7 +44,7 @@ function getFen(board, player) {
     for (let pos = 0; pos < SIZE * SIZE; pos++) {
         if (k >= SIZE) {
             if (c > 0) {
-                str += pieceNotation(c, p);
+                str += pieceNotation(c, p, SIZE);
             }
             str += "/";
             k = 0;
@@ -50,18 +52,18 @@ function getFen(board, player) {
             p = 0;
         }
         k++;
-        const v = board[pos];
+        const v = board[pos] * player;
         if (Math.abs(v) < 0.01) {
             if ((p != 0) || ((c > 8) && (p == 0))) {
-                str += pieceNotation(c, p);
+                str += pieceNotation(c, p, SIZE);
                 c = 0;
             }
             c++;
             p = 0;
         } else {
-            if (v * player < -0.01) {
+            if (v * p < 0.01) {
                 if (c > 0) {
-                    str += pieceNotation(c, p);
+                    str += pieceNotation(c, p, SIZE);
                     c = 0;
                 }
                 p = v;
@@ -72,8 +74,9 @@ function getFen(board, player) {
         }
     }
     if (c > 0) {
-        str += pieceNotation(c, p);
+        str += pieceNotation(c, p, SIZE);
     }
+    str += (player > 0) ? '-w' : '-b';
     return str;
 }
 
@@ -132,6 +135,7 @@ function navigate(pos, dir, size) {
 
 function checkGoal(board, player) {
     if (edges === null) {
+        edges = [];
         let e = [];
         for (let i = 0; i < size; i++) e.push(i);
         edges.push(e);
@@ -155,7 +159,7 @@ function checkGoal(board, player) {
     for (let i = 0; i < group.length; i++) {
         if (f) break;
         _.each([-size, -size + 1, 1, size, size - 1, -1], function(dir) {
-            const p = navigate(group[i], dir, size);
+            const p = utils.navigate(group[i], dir, size);
             if (p === null) return;
             if (_.indexOf(group, p) >= 0) return;
             if (board[p] * player < EPS) return;
@@ -174,7 +178,7 @@ function checkGoal(board, player) {
     for (let i = 0; i < group.length; i++) {
         if (f) break;
         _.each([-size, -size + 1, 1, size, size - 1, -1], function(dir) {
-            const p = navigate(group[i], dir, size);
+            const p = utils.navigate(group[i], dir, size);
             if (p === null) return;
             if (_.indexOf(group, p) >= 0) return;
             if (board[p] * player > -EPS) return;
@@ -191,30 +195,36 @@ async function FindMove(fen, player, callback, done, logger) {
     let board = new Float32Array(SIZE * SIZE);
     InitializeFromFen(fen, board, player);
 
-    let moves = [];
-    for (let pos = 0; pos < SIZE * SIZE; pos++) {
-        if (Math.abs(board[pos]) < 0.01) moves.push(pos);
-    }
-
-    if (moves.length > 0) {
-        const ix = _.random(moves.length);
-        const m = moves[ix];
-    
-        let result = new Float32Array(SIZE * SIZE);
-        result[m] = 1;
-        dump(board, SIZE, result);
-        const t1 = Date.now();
-    
-        board[m] = 1;
-    }
-
-    const goal = checkGoal(board, player);
+    let goal = checkGoal(board, player, size);
     if (goal !== null) {
         done(goal);
         return;
     }
 
-    const setup = getFen(board, player);
+    let moves = [];
+    for (let pos = 0; pos < SIZE * SIZE; pos++) {
+        if (Math.abs(board[pos]) < 0.01) moves.push(pos);
+    }
+
+    let m = null;
+    if (moves.length > 0) {
+        const ix = _.random(moves.length);
+        m = moves[ix];
+    
+        let result = new Float32Array(SIZE * SIZE);
+        result[m] = 1;
+        dump(board, SIZE, result);
+        board[m] = 1;
+    }
+    const t1 = Date.now();
+
+    goal = checkGoal(board, player, size);
+    if (goal !== null) {
+        done(goal);
+        return;
+    }
+
+    const setup = getFen(board, -player);
     callback(m, setup, 1000, t1 - t0);
 }
 

@@ -31,10 +31,10 @@ function dump(board, size, moves) {
     console.log('');
 }
 
-function pieceNotation(c, p) {
+function pieceNotation(c, p, size) {
     if (p == 0) return '' + c;
     c--;
-    if (p > 0.01) c += SIZE;
+    if (p < -0.01) c += size;
     return LETTERS[c];
 }
 
@@ -121,6 +121,9 @@ function navigate(pos, dir, size) {
             if (x == 0) return null;
         } else {
             if (y == 0) return null;
+            if (dir > -size) {
+                if (x == size - 1) return null;
+            }
         }
     }
     if (dir > 0) {
@@ -128,6 +131,9 @@ function navigate(pos, dir, size) {
             if (x == size - 1) return null;
         } else {
             if (y == size - 1) return null;
+            if (dir < size) {
+                if (x == 0) return null;
+            }
         }
     }
     return pos + dir;
@@ -137,32 +143,32 @@ function checkGoal(board, player) {
     if (edges === null) {
         edges = [];
         let e = [];
-        for (let i = 0; i < size; i++) e.push(i);
+        for (let i = 0; i < SIZE; i++) e.push(i);
         edges.push(e);
         e = [];
-        for (let i = 0; i < size; i++) e.push(size * (size - 1) + i);
+        for (let i = 0; i < SIZE; i++) e.push(SIZE * (SIZE - 1) + i);
         edges.push(e);
         e = [];
-        for (let i = 0; i < size; i++) e.push(size * i);
+        for (let i = 0; i < SIZE; i++) e.push(SIZE * i);
         edges.push(e);
         e = [];
-        for (let i = 0; i < size; i++) e.push(size * i + (size - 1));
+        for (let i = 0; i < SIZE; i++) e.push(SIZE * i + (SIZE - 1));
         edges.push(e);
     }
     let ix = 0;
     let group = [];
     _.each(edges[ix], function(p) {
-        if (board[p] * player < EPS) return;
+        if (board[p] < 0.01) return;
         group.push(p);
     });
     let f = false;
     for (let i = 0; i < group.length; i++) {
         if (f) break;
-        _.each([-size, -size + 1, 1, size, size - 1, -1], function(dir) {
-            const p = utils.navigate(group[i], dir, size);
+        _.each([-SIZE, -SIZE + 1, 1, SIZE, SIZE - 1, -1], function(dir) {
+            const p = navigate(group[i], dir, SIZE);
             if (p === null) return;
             if (_.indexOf(group, p) >= 0) return;
-            if (board[p] * player < EPS) return;
+            if (board[p] < 0.01) return;
             if (_.indexOf(edges[ix + 1], p) >= 0) f = true;
             group.push(p);
         });
@@ -171,17 +177,17 @@ function checkGoal(board, player) {
     ix += 2;
     group = [];
     _.each(edges[ix], function(p) {
-        if (board[p] * player > -EPS) return;
+        if (board[p] > -0.01) return;
         group.push(p);
     });
     f = false;
     for (let i = 0; i < group.length; i++) {
         if (f) break;
-        _.each([-size, -size + 1, 1, size, size - 1, -1], function(dir) {
-            const p = utils.navigate(group[i], dir, size);
+        _.each([-SIZE, -SIZE + 1, 1, SIZE, SIZE - 1, -1], function(dir) {
+            const p = navigate(group[i], dir, SIZE);
             if (p === null) return;
             if (_.indexOf(group, p) >= 0) return;
-            if (board[p] * player > -EPS) return;
+            if (board[p] > -0.01) return;
             if (_.indexOf(edges[ix + 1], p) >= 0) f = true;
             group.push(p);
         });
@@ -195,9 +201,9 @@ async function FindMove(fen, player, callback, done, logger) {
     let board = new Float32Array(SIZE * SIZE);
     InitializeFromFen(fen, board, player);
 
-    let goal = checkGoal(board, player, size);
+    let goal = checkGoal(board, player, SIZE);
     if (goal !== null) {
-        done(goal);
+        done(player * goal);
         return;
     }
 
@@ -218,9 +224,9 @@ async function FindMove(fen, player, callback, done, logger) {
     }
     const t1 = Date.now();
 
-    goal = checkGoal(board, player, size);
+    goal = checkGoal(board, player, SIZE);
     if (goal !== null) {
-        done(goal);
+        done(player * goal);
         return;
     }
 

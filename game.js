@@ -34,7 +34,7 @@ function dump(board, size, moves) {
 function pieceNotation(c, p, size) {
     if (p == 0) return '' + c;
     c--;
-    if (p < -0.01) c += size;
+    if (p > 0.01) c += size;
     return LETTERS[c];
 }
 
@@ -223,12 +223,6 @@ async function FindMove(fen, player, callback, done, logger) {
         board[m] = 1;
     }
     const t1 = Date.now();
-
-    goal = checkGoal(board, player, SIZE);
-    if (goal !== null) {
-        done(player * goal);
-        return;
-    }
 
     const setup = getFen(board, -player);
     callback(m, setup, 1000, t1 - t0);

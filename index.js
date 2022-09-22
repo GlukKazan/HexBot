@@ -4,6 +4,7 @@ const axios = require('axios');
 const _ = require('underscore');
 
 const game = require('./game');
+const utils = require('./utils');
 
 const STATE = {
     INIT: 1,
@@ -16,8 +17,8 @@ const STATE = {
 };
 
 const SERVICE  = 'https://games.dtco.ru';
-const USERNAME = 'HexBot';
-const PASSWORD = 'HexBot';
+const USERNAME = 'test';
+const PASSWORD = 'test';
 
 let TOKEN   = null;
 let sid     = null;
@@ -192,7 +193,7 @@ function DoneCallback(goal) {
 }
 
 function FinishTurnCallback(bestMove, fen, value, time) {
-    let move = game.FormatMove(bestMove);
+    let move = utils.FormatMove(bestMove);
     const result = setup.match(/[?&]turn=(\d+)/);
     if (result) {
         turn = result[1];

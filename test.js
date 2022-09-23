@@ -4,15 +4,18 @@ const graph = require('./graph');
 const utils = require('./utils');
 
 const SIZE   = 11;
-const FEN    = '92/92/1B2Aa1A2/1a1A1B1b1/2b1cA2/2AbA5/3AaA1a3/2Aa1B1aA1/2aA2Bb1/bA4AaA1/Aa6a2';
-const PLAYER = 1;
+const FEN    = '2A2Aa4/3a1A1a3/4B2a2/2aAaB4/2aBaAaA2/2bAbAa2/1aEaA2/1a2aAc2/2a2C1b/6aAaAa/7B2';
+const PLAYER = -1;
 
 async function run() {
     const board = new Float32Array(SIZE * SIZE);
-    utils.InitializeFromFen(FEN, board, SIZE, PLAYER);
+    utils.InitializeFromFen(FEN, board, PLAYER);
     utils.dump(board, SIZE, 0);
-    const g = graph.isLose(board, -PLAYER);
-    console.log('Lose: ' + g);
+    let goal = utils.checkGoal(board, PLAYER, SIZE);
+    if (goal !== null) {
+        console.log('Goal = ' + goal);
+        return;
+    }
 }
 
 (async () => { await run(); })();

@@ -13,12 +13,9 @@ async function FindMove(fen, player, callback, done, logger) {
     let board = new Float32Array(size * size);
     utils.InitializeFromFen(fen, board, player);
 
-    if (graph.isLose(board, player)) {
-        done(-1);
-        return;
-    }
-    if (graph.isLose(board, -player)) {
-        done(1);
+    let goal = utils.checkGoal(board, player, size);
+    if (goal !== null) {
+        done(goal);
         return;
     }
 

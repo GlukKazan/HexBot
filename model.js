@@ -12,8 +12,10 @@ async function init() {
 }
 
 async function load(url) {
-    await init();
-    model = await tf.loadLayersModel(url);
+    if (model === null) {
+        await init();
+        model = await tf.loadLayersModel(url);
+    }
 }
 
 async function predict(board, size) {
